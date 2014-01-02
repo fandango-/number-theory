@@ -1,1 +1,0 @@
-1. Implemented a segmented sieve of Eratosthenes which takes O(n(lg n)(lg lg n)) time and takes up O(sqrt(n)) space.
