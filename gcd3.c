@@ -20,6 +20,7 @@
 /******************************************************************************
 
     Copyright (C) 2009 William Hart
+    Copyright (C) 2014 Abhinav Baid
 
 ******************************************************************************/
 
@@ -28,28 +29,38 @@
 #include "flint/ulong_extras.h"
 #include <time.h>
 
+#if ((GMP_LIMB_BITS == 64 && defined (__amd64__)) || (GMP_LIMB_BITS == 32 && (defined (__i386__) \
+   || defined (__i486__) || defined(__amd64__)))) 
 mp_limb_t
 n_gcd2(mp_limb_t x, mp_limb_t y)
 {
-	register const unsigned f = FLINT_MIN(__builtin_ctzl(x), __builtin_ctzl(y));
-  x >>= __builtin_ctzl(x);
-  y >>= __builtin_ctzl(y);
+	if(x == 0) return y;
+	if(y == 0) return x;
+	register unsigned s0, s1;
+	count_trailing_zeros(s0, x);
+	count_trailing_zeros(s1, y);
+	register const unsigned f = FLINT_MIN(s0, s1);
+  x >>= s0;
+  y >>= s1;
 
   while(x!=y)
   {
     if(x<y)
     {
       y-=x;
-      y >>= __builtin_ctzl(y);
+      count_trailing_zeros(s1, y);
+      y >>= s1;
     }
     else
     {
       x-=y;
-      x >>= __builtin_ctzl(x);
+      count_trailing_zeros(s0, x);
+      x >>= s0;
     }
   }
   return x<<f;
 }
+#endif
 int main(void)
 {
 	clock_t begin, end;
@@ -84,7 +95,7 @@ int main(void)
       end = clock();
       time1 += (double)(end - begin) / CLOCKS_PER_SEC;
 	begin = clock();	
-      result = (n_gcd2(a*c, b*c) == c);
+      result &= (n_gcd2(a*c, b*c) == c);
       end = clock();
       time2 += (double)(end - begin) / CLOCKS_PER_SEC;
       if (!result)

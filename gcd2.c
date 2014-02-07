@@ -20,6 +20,7 @@
 /******************************************************************************
 
     Copyright (C) 2009 William Hart
+    Copyright (C) 2014 Abhinav Baid
 
 ******************************************************************************/
 
@@ -29,10 +30,13 @@
 #include <time.h>
 
 mp_limb_t
-z_gcd(mp_limb_t x, mp_limb_t y)
+z_gcd(mp_limb_signed_t x, mp_limb_signed_t y)
 {
     mp_limb_signed_t u3, v3;
     mp_limb_signed_t quot;
+    
+    x = FLINT_ABS(x);
+    y = FLINT_ABS(y);
 
     u3 = x;
     v3 = y;
@@ -79,7 +83,7 @@ int main(int argc, char **argv)
 
    for (i = 0; i < 100000; i++) 
    {
-      mp_limb_t a, b, c, bits1, bits2, bits3;
+      mp_limb_signed_t a, b, c, bits1, bits2, bits3;
       
       bits1 = n_randint(state, 31-1) + 1;
       bits2 = n_randint(state, bits1) + 1;

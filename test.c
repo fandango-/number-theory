@@ -23,12 +23,13 @@
 
 
 #include <stdio.h>
-#include "gcd.c"
+#include "flint/flint.h"
+#include "flint/longlong.h"
 
 int main(int argc, char **argv)
 {
-	mp_limb_t gcd;
-	gcd = n_gcd(14157, 5950);
-	printf("%lu\n", gcd);	
+	int x;
+	count_trailing_zeros(x, 100);
+	printf("%d", x);
 	return 0;
 }
