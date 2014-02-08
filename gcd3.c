@@ -29,10 +29,9 @@
 #include "flint/ulong_extras.h"
 #include <time.h>
 
-#if ((GMP_LIMB_BITS == 64 && defined (__amd64__)) || (GMP_LIMB_BITS == 32 && (defined (__i386__) \
-   || defined (__i486__) || defined(__amd64__)))) 
+#if (defined (__amd64__) || defined (__i386__) || defined (__i486__))	 
 mp_limb_t
-n_gcd2(mp_limb_t x, mp_limb_t y)
+n_gcd(mp_limb_t x, mp_limb_t y)
 {
 	if(x == 0) return y;
 	if(y == 0) return x;
@@ -60,6 +59,55 @@ n_gcd2(mp_limb_t x, mp_limb_t y)
   }
   return x<<f;
 }
+#else
+
+mp_limb_t
+n_gcd(mp_limb_t x, mp_limb_t y)
+{
+    mp_limb_t u3, v3;
+    mp_limb_t quot, rem;
+
+    u3 = x;
+    v3 = y;
+
+    if ((mp_limb_signed_t) (x & y) < WORD(0))  /* x and y both have top bit set */
+    {
+        quot = u3 - v3;
+        u3 = v3;
+        v3 = quot;
+    }
+
+    while ((mp_limb_signed_t) (v3 << 1) < WORD(0))  /* second value has second msb set */
+    {
+        quot = u3 - v3;
+        u3   = v3;
+        if (quot < v3)             v3 = quot;
+        else if (quot < (v3 << 1)) v3 = quot - u3;
+        else                       v3 = quot - (u3 << 1);
+    }
+
+    while (v3)
+    {
+        if (u3 < (v3 << 2))  /* overflow not possible due to top 2 bits of v3 not being set */
+        {
+            quot = u3 - v3;
+            u3   = v3;
+            if (quot < v3)             v3 = quot;
+            else if (quot < (v3 << 1)) v3 = quot - u3;
+            else                       v3 = quot - (u3 << 1);
+        }
+        else
+        {
+            quot = u3 / v3;
+            rem  = u3 - v3 * quot;
+            u3   = v3;
+            v3   = rem;
+        }
+    }
+
+    return u3;
+}
+
 #endif
 int main(void)
 {
@@ -87,7 +135,7 @@ int main(void)
       {
          a = n_randtest_bits(state, bits1);
          b = n_randtest_bits(state, bits2);
-      } while ((n_gcd2(a, b) != UWORD(1)));
+      } while ((n_gcd(a, b) != UWORD(1)));
 
       c = n_randtest_bits(state, bits3);
       begin = clock();
@@ -95,7 +143,7 @@ int main(void)
       end = clock();
       time1 += (double)(end - begin) / CLOCKS_PER_SEC;
 	begin = clock();	
-      result &= (n_gcd2(a*c, b*c) == c);
+      result &= (n_gcd(a*c, b*c) == c);
       end = clock();
       time2 += (double)(end - begin) / CLOCKS_PER_SEC;
       if (!result)
